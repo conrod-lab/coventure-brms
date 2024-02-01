@@ -4,7 +4,6 @@ library(dplyr)
 library(tidyr)
 library(data.table)
 library(brms)
-library(formattable)
 library(broom)
 
 

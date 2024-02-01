@@ -2,8 +2,8 @@
 #SBATCH --job-name=brms_array
 #SBATCH --cpus-per-task=8 \
 #SBATCH --mem=65G \
-#SBATCH --output=/home/spinney/scratch/coventure/output/brms_%A.out \
-#SBATCH --error=/home/spinney/scratch/coventure/error/brms_%A.err \
+#SBATCH --output=/home/spinney/scratch/coventure/output/brms_%A_%a.out \
+#SBATCH --error=/home/spinney/scratch/coventure/error/brms_%A_%a.err \
 #SBATCH --array=1-4   # Set the range to match the number of models (e.g., 1 to 5)
 
 

@@ -4,9 +4,8 @@ library(dplyr)
 library(tidyr)
 library(data.table)
 library(brms)
-library(formattable)
 library(broom)
-library(psych)
+# library(psych)
 
 ### Put the working directory to where data file is ####
 setwd("/data")
@@ -59,9 +58,9 @@ cov_5=melt(setDT(cov_4),
            variable.name = 'var', value.name = c('DEPADO', 'Flagged','DEP', 'BSI', "year"))
 
 # in the long dataset BSI is undashed
-psych::describeBy(cov_5$BSI, cov_5$year, mat = TRUE) 
+#psych::describeBy(cov_5$BSI, cov_5$year, mat = TRUE) 
 # in the long dataset DEP is dashed
-psych::describeBy(cov_5$DEP, cov_5$year, mat = TRUE) 
+#psych::describeBy(cov_5$DEP, cov_5$year, mat = TRUE) 
 
 ################# Depression model with continuous time variable ################
 

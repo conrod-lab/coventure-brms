@@ -4,9 +4,8 @@ library(dplyr)
 library(tidyr)
 library(data.table)
 library(brms)
-library(formattable)
 library(broom)
-library(psych)
+# library(psych)
 
 
 ### Put the working directory to where data file is ####
@@ -56,9 +55,9 @@ cov_5=melt(setDT(cov_4),
            measure = patterns('DEPAPO_', 'Flagged_','ANX_', 'BSI_', "year"),
            variable.name = 'var', value.name = c('DEPADO', 'Flagged','ANX', 'BSI_A', "year"))
 # in the long dataset BSI_A is undashed
-psych::describeBy(cov_5$BSI_A, cov_5$year, mat = TRUE) 
-# in the long dataset ANX is dashed
-psych::describeBy(cov_5$ANX, cov_5$year, mat = TRUE) 
+# psych::describeBy(cov_5$BSI_A, cov_5$year, mat = TRUE) 
+# # in the long dataset ANX is dashed
+# psych::describeBy(cov_5$ANX, cov_5$year, mat = TRUE) 
 ################# Anxiety model with continuous time variable ################
 
 model_Undashed_BSI <- brm(BSI_A ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
