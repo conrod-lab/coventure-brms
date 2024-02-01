@@ -4,22 +4,21 @@
 #SBATCH --mem=65G \
 #SBATCH --output=/home/spinney/scratch/coventure/output/brms_%A_%a.out \
 #SBATCH --error=/home/spinney/scratch/coventure/error/brms_%A_%a.err \
-#SBATCH --array=1-4   # Set the range to match the number of models (e.g., 1 to 5)
+#SBATCH --array=1-1   # Set the range to match the number of models (e.g., 1 to 5)
 
 
 module load r/4.2.2
 
 # Define an array of R script names
 # R_SCRIPTS=(
-#   "Coventure_Anxiety.R" 
-#   "Coventure_DEPADO_dashed.R" 
-#   "Coventure_DEPADO_undashed.R"  
-#   "Coventure_Depression.R")
-
+#   "Coventure_Anxiety_tables.R" 
+#   "Coventure_DEPADO_dashed_tables.R" 
+#   "Coventure_DEPADO_undashed_tables.R"  
+#   "Coventure_Depression_tables.R")
 
 R_SCRIPTS=(
   "Coventure_SDQ.R")
-  
+
 # Get the index (array task ID) to choose the R script
 SCRIPT_INDEX=${SLURM_ARRAY_TASK_ID}
 
@@ -30,7 +29,7 @@ if [ $SCRIPT_INDEX -ge 1 ] && [ $SCRIPT_INDEX -le ${#R_SCRIPTS[@]} ]; then
   echo "Running $SELECTED_SCRIPT"
   
   # Run the selected R script using Singularity
-  singularity run -B /home/spinney/scratch/coventure/src:/data  -B /home/spinney/scratch/coventure/models:/models -B /home/spinney/scratch/coventure/output:/output /home/spinney/scratch/containers/stan-cmdstanr-docker_latest.sif Rscript /data/$SELECTED_SCRIPT
+  Rscript /home/spinney/scratch/coventure/src/$SELECTED_SCRIPT
 else
   echo "Invalid script index: $SCRIPT_INDEX"
 fi
