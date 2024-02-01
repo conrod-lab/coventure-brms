@@ -10,7 +10,7 @@ library(psych)
 
 
 ### Put the working directory to where data file is ####
-setwd("~/....")
+setwd("/data")
 cov <- read_sav("coventurefinaldataset.sav")
 
 ##### filter out those with NO_SURPS_NO_DEPADO ##### 
@@ -68,8 +68,8 @@ model_Undashed_BSI <- brm(BSI_A ~ 1 + DEM_01 + Exp_Group + Language + year + yea
               seed = 123)      
 mod_anx_a=summary(model_Undashed_BSI)
 
-saveRDS(model_Undashed_BSI, "/models/model-undashed-bsi.rds")
-saveRDS(mod_anx_a, "/models/mod_subs-undashed-bsi.rds")
+saveRDS(model_Undashed_BSI, "/models/anxiety/model-undashed-bsi.rds")
+saveRDS(mod_anx_a, "/models/anxiety/mod_subs-undashed-bsi.rds")
 #formattable(mod_anx_a$fixed)
 
 model_Dashed_BSI <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
@@ -79,8 +79,8 @@ model_Dashed_BSI <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Ex
               seed = 123)      
 mod_anx_b=summary(model_Dashed_BSI)
 
-saveRDS(model_Dashed_BSI, "/models/model-dashed-bsi.rds")
-saveRDS(mod_anx_b, "/models/mod_subs-dashed-bsi.rds")
+saveRDS(model_Dashed_BSI, "/models/anxiety/model-dashed-bsi.rds")
+saveRDS(mod_anx_b, "/models/anxiety/mod_subs-dashed-bsi.rds")
 #formattable(mod_anx_b$fixed)
 ################# Anxiety model with categorical time variable ################
 cov_5$year=as.factor(cov_5$year)
@@ -92,8 +92,8 @@ model_Undashed_BSI_C <- brm(BSI_A ~ 1 + DEM_01 + Exp_Group + Language + year + y
                         seed = 123)      
 mod_anx_a_C=summary(model_Undashed_BSI_C)
 
-saveRDS(model_Undashed_BSI_C, "/models/model-undashed-bsi-c.rds")
-saveRDS(mod_anx_a_C, "/models/mod_subs-undashed-bsi-c.rds")
+saveRDS(model_Undashed_BSI_C, "/models/anxiety/model-undashed-bsi-c.rds")
+saveRDS(mod_anx_a_C, "/models/anxiety/mod_subs-undashed-bsi-c.rds")
 #formattable(mod_anx_a_C$fixed)
 
 model_Dashed_BSI_C <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
@@ -102,6 +102,6 @@ model_Dashed_BSI_C <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:
                           cores = 4, chains = 4, 
                           seed = 123)      
 mod_anx_b_C=summary(model_Dashed_BSI_C)
-saveRDS(model_Dashed_BSI_C, "/models/model-dashed-bsi-c.rds")
-saveRDS(mod_anx_b_C, "/models/mod_subs-dashed-bsi-c.rds")
+saveRDS(model_Dashed_BSI_C, "/models/anxiety/model-dashed-bsi-c.rds")
+saveRDS(mod_anx_b_C, "/models/anxiety/mod_subs-dashed-bsi-c.rds")
 #formattable(mod_anx_b_C$fixed)

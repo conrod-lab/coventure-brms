@@ -9,7 +9,7 @@ library(broom)
 library(psych)
 
 ### Put the working directory to where data file is ####
-setwd("~/....")
+setwd("/data")
 cov <- read_sav("coventurefinaldataset.sav")
 
 ##### filter out those with NO_SURPS_NO_DEPADO ##### 
