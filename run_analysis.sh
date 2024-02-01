@@ -4,18 +4,17 @@
 #SBATCH --mem=65G \
 #SBATCH --output=/home/spinney/scratch/coventure/output/brms_%A.out \
 #SBATCH --error=/home/spinney/scratch/coventure/error/brms_%A.err \
-#SBATCH --array=1-5   # Set the range to match the number of models (e.g., 1 to 5)
+#SBATCH --array=1-4   # Set the range to match the number of models (e.g., 1 to 5)
 
 
 module load StdEnv/2020 apptainer/1.1.8
 
 # Define an array of R script names
 R_SCRIPTS=(
-  "brms_model1.R" 
-  "brms_model2.R" 
-  "brms_model3.R"  
-  "brms_model4.R" 
-  "brms_model5.R")
+  "Coventure_Anxiety.R" 
+  "Coventure_DEPADO_dashed.R" 
+  "Coventure_DEPADO_undashed.R"  
+  "Coventure_Depression.R")
 
 # Get the index (array task ID) to choose the R script
 SCRIPT_INDEX=${SLURM_ARRAY_TASK_ID}

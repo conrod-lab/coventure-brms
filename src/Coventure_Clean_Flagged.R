@@ -4,18 +4,12 @@ library(dplyr)
 library(tidyr)
 library(data.table)
 library(brms)
-#library(formattable)
+library(formattable)
 library(broom)
-library(rstan)
 
-# set number of cores to use
-options(mc.cores = 4)
-
-# save models
-rstan_options(auto_write = TRUE)
 
 ### Put the working directory to where data file is ####
-setwd("/data")
+setwd("~/....")
 cov <- read_sav("coventurefinaldataset.sav")
 
 ##### filter out those with NO_SURPS_NO_DEPADO ##### 
@@ -87,7 +81,6 @@ cov_5=melt(setDT(cov_4),
            variable.name = 'var', value.name = c('DEPADO', 'Flagged','DEP', 'BSI', "year"))
 
 
-# Model 1
 ##### model with continuous time variable without IPW #####
 cov_5$Flagged=as.factor(cov_5$Flagged)
 model3a <- brm(Flagged ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
@@ -97,9 +90,8 @@ model3a <- brm(Flagged ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Gro
                cores = 4, chains = 4, 
                seed = 123)      
 mod_subs_a=summary(model3a)
-#formattable(mod_subs_a$fixed)
+formattable(mod_subs_a$fixed)
 
-# Model 2
 ##### model with categorical time variable without IPW #####
 cov_5$year=as.factor(cov_5$year)
 
@@ -110,9 +102,8 @@ model3d <- brm(Flagged ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Gro
                cores = 4, chains = 4, 
                seed = 123)      
 mod_subs_d=summary(model3d)
-#formattable(mod_subs_d$fixed)
+formattable(mod_subs_d$fixed)
 
-# Model 3
 ##### model with continuous time variable without IPW for visualization #####
 cov_5$Flagged=as.factor(cov_5$Flagged)
 model3v <- brm(Flagged ~ 1 + Exp_Group +  year + year:Exp_Group + (1|id+schoolnum),  
@@ -122,9 +113,8 @@ model3v <- brm(Flagged ~ 1 + Exp_Group +  year + year:Exp_Group + (1|id+schoolnu
                cores = 4, chains = 4, 
                seed = 123)      
 mod_subs_v=summary(model3v)
-#formattable(mod_subs_v$fixed)
+formattable(mod_subs_v$fixed)
 
-# Model 4
 ##### Creating The long format dataset with IPW #####
 cov_5_b=melt(setDT(cov_4_b), 
              measure = patterns('DEPAPO_', 'Flagged_','DEP_', 'BSI_', "year"),
@@ -143,11 +133,10 @@ model3b <-  brm(Flagged|weights(ipw) ~ 1 + DEM_01 + Exp_Group + Language + year 
                 seed = 123) 
 mod_subs_b=summary(model3b)
 
-#formattable(mod_subs_b$fixed)
+formattable(mod_subs_b$fixed)
 
 ##### model with categorical time variable with IPW #####
 table(cov_5$year)
-# Model 5
 cov_5_b$year=as.factor(cov_5_b$year)
 model3c <-  brm(Flagged|weights(ipw) ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
                 data = cov_5, 
@@ -157,7 +146,7 @@ model3c <-  brm(Flagged|weights(ipw) ~ 1 + DEM_01 + Exp_Group + Language + year 
                 seed = 123)   
 mod_subs_c=summary(model3c)
 
-#formattable(mod_subs_c$fixed)
+formattable(mod_subs_c$fixed)
 
 
 
