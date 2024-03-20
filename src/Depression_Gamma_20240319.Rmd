@@ -1,0 +1,146 @@
+---
+title: "CoVenture Secondary Outcomes 19 March 2024"
+author: "Samantha J. Lynch"
+output:  
+  html_notebook:
+    theme: paper
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE,
+    message = FALSE,
+    warning = FALSE,
+    fig.width = 7,
+    tidy = TRUE
+)
+
+## turn off scientific notation 
+options(scipen=999)
+```
+
+```{r libraries, options}
+# Load libraries
+library(tidyverse) #
+library(haven)  # load and work with SPSS data files
+library(summarytools) # for summary statistics
+library(gtsummary) # for summary statistics
+library(ggthemes)
+library(lme4) #frequentist regression models
+library(brms) # Bayesian Regression Models
+library(StanHeaders) # need to laod this for brms
+library(data.table) # wrangling and formatting data and tables
+library(formattable)
+library(broom)
+library(finalfit)
+library(knitr)
+library(emmeans)
+library(ggeffects)
+library(tidybayes)
+
+## set theme
+theme_gtsummary_journal(journal = "jama")
+theme_gtsummary_compact()
+
+```
+
+# Depression 
+
+## Gaussian 
+```{r depression gaussian, options, echo=TRUE, results='asis'}
+mod_dep_cont <- brm(DEP ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
+               data = cov_5, 
+               family = gaussian,
+               warmup = 1000, iter = 4000, 
+               cores = 4, chains = 4, 
+               seed = 123)      
+```
+
+
+#### Results {.tabset}
+
+##### Summary
+```{r depression gaussian results summary, echo=FALSE}
+summ_mod_dep_cont=summary(mod_dep_cont)
+formattable(summ_mod_dep_cont$fixed)
+
+
+```
+
+##### Detailed
+```{r depression gaussian results detailed, echo=FALSE}
+summ_mod_dep_cont
+```
+
+### Model quality checks
+#### Plot predicted data using posterior predictive checks
+```{r Plot density of data vs model predicted data}
+pp_check(mod_dep_cont)
+```
+#### Plot variables and traceplots
+
+```{r traceplots}
+plot(mod_dep_cont,
+     variable = "^b_", regex = TRUE, # only plot population level
+     plot = TRUE, ask = FALSE, newpage=FALSE) 
+```
+#### Plot predicted response for the different predicotrs
+```{r conditional effects dep}
+plot(conditional_effects(mod_dep_cont))
+```
+
+## Gamma 
+```{r depression gamma, echo=TRUE, results='hide'}
+mod_dep_gamma <- brm(DEP ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
+               data = cov_5, 
+               family = hurdle_gamma(link = "log"),
+               warmup = 1000, iter = 4000, 
+               cores = 4, chains = 4, 
+               seed = 123)      
+```
+### Results {.tabset}
+#### Summary
+```{r depression gamma results summary}
+summ_mod_dep_gamma=summary(mod_dep_gamma)
+formattable(summ_mod_dep_gamma$fixed)
+```
+#### Detailed
+```{r depression gamma results}
+summ_mod_dep_gamma
+```
+### Model quality checks
+#### Plot predicted data using posterior predictive checks
+```{r Gamma Plot density of data vs model predicted data}
+pp_check(mod_dep_gamma)
+```
+
+#### Plot variables and traceplots
+```{r gamma traceplots}
+plot(mod_dep_gamma,
+     variable = "^b_", regex = TRUE, # only plot population level
+     plot = TRUE, ask = FALSE, newpage=FALSE) 
+```
+
+#### Plot predicted response for the different predicotrs
+```{r gamma conditional effects dep,fig.height=5}
+plot(conditional_effects(mod_dep_gamma))
+```
+
+## Plots of raw data
+
+```{r distribution dep, fig.height=5}
+# Assuming 'cov_5' is your data frame and 'DEP' is the response variable
+hist(cov_5$DEP, main = "Histogram of DEP", xlab = "DEP")
+
+# Add a line at y = 0 for reference
+abline(h = 0, col = "red")
+
+# Add a vertical line at x = 0 for reference
+abline(v = 0, col = "blue")
+```
+
+```{r boxplot dep, fig.height=5}
+boxplot(cov_5$DEP, main = "Boxplot of DEP")
+```
+
