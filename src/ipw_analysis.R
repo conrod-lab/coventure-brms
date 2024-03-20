@@ -13,6 +13,8 @@ library(ggplot2)
 # set number of cores to use
 options(mc.cores = 4)
 
+# add a comment here
+
 # save models
 rstan_options(auto_write = TRUE)
 

@@ -2,3 +2,5 @@
 *.sav
 *.out
 *.err
+.Rproj.user
+.Rhistory
