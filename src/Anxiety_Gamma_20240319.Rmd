@@ -1,5 +1,5 @@
 ---
-title: "CoVenture Depression Outcomes 20 March 2024"
+title: "CoVenture Anxiety Outcomes 20 March 2024"
 author: "Samantha J. Lynch"
 output:  
   html_notebook:
@@ -45,95 +45,101 @@ theme_gtsummary_compact()
 
 ```
 
-# Depression 
+# Anxiety 
 
 ## Gaussian 
 ```{r depression gaussian, options, echo=TRUE, results='asis'}
-mod_dep_cont <- brm(DEP ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
+mod_anx_cont <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
                data = cov_5, 
                family = gaussian,
                warmup = 1000, iter = 4000, 
                cores = 4, chains = 4, 
-               seed = 123)      
+               seed = 123,
+               control = list(adapt_delta = 0.9)) #increasing for better convergence     
 ```
 
 
 ### Results {.tabset}
+
 #### Summary
-- Although Rhat and Bulk_ESS look good, the density plot looks terrible. We shouldn't use this model at all for our results.
 ```{r depression gaussian results summary, echo=FALSE}
-summ_mod_dep_cont=summary(mod_dep_cont)
-formattable(summ_mod_dep_cont$fixed)
+summ_mod_anx_cont=summary(mod_anx_cont)
+formattable(summ_mod_anx_cont$fixed)
 
 
 ```
 
 #### Detailed
 ```{r depression gaussian results detailed, echo=FALSE}
-summ_mod_dep_cont
+summ_mod_anx_cont
 ```
 
 ### Model quality checks
 #### Plot predicted data using posterior predictive checks
 ```{r Plot density of data vs model predicted data}
-pp_check(mod_dep_cont)
+pp_check(mod_anx_cont)
 ```
 #### Plot variables and traceplots
 
 ```{r traceplots}
-plot(mod_dep_cont,
+plot(mod_anx_cont,
      variable = "^b_", regex = TRUE, # only plot population level
      plot = TRUE, ask = FALSE, newpage=FALSE) 
 ```
 #### Plot predicted response for the different predicotrs
-```{r conditional effects dep,fig.height=4}
-plot(conditional_effects(mod_dep_cont), plot = TRUE, ask = FALSE, newpage=FALSE)
+```{r conditional effects anx}
+plot(conditional_effects(mod_anx_cont), plot = TRUE, ask = FALSE, newpage=FALSE)
 ```
 
 ## Gamma 
 ```{r depression gamma, echo=TRUE, results='hide'}
-mod_dep_gamma <- brm(DEP ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
+mod_anx_gamma <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
                data = cov_5, 
                family = hurdle_gamma(link = "log"),
                warmup = 1000, iter = 4000, 
                cores = 4, chains = 4, 
-               seed = 123)      
+               seed = 123,
+               control = list(adapt_delta = 0.9)) #increasing for better convergence     
 ```
 ### Results {.tabset}
 #### Summary
--   Small, non-significant, negative effect (slower growth in depression in intervention group compared to control group)
--   Model diagnostics look good (Rhat below 1.01 and Bulk-ESS above 1000), density plot looks good, trace plots I think look ok
 ```{r depression gamma results summary}
-summ_mod_dep_gamma=summary(mod_dep_gamma)
-formattable(summ_mod_dep_gamma$fixed)
+summ_mod_anx_gamma=summary(mod_anx_gamma)
+formattable(summ_mod_anx_gamma$fixed)
 ```
 #### Detailed
 ```{r depression gamma results}
-summ_mod_dep_gamma
+summ_mod_anx_gamma
 ```
 ### Model quality checks
+#### Pairs plot (as suggested by BRMS)
+I'm not really sure how to interpret this. 
+```{r pairs plot, fig.height=10}
+pairs(mod_dep_gamma)
+```
+
 #### Plot predicted data using posterior predictive checks
 ```{r Gamma Plot density of data vs model predicted data}
-pp_check(mod_dep_gamma)
+pp_check(mod_anx_gamma)
 ```
 
 #### Plot variables and traceplots
 ```{r gamma traceplots}
-plot(mod_dep_gamma,
+plot(mod_anx_gamma,
      variable = "^b_", regex = TRUE, # only plot population level
      plot = TRUE, ask = FALSE, newpage=FALSE) 
 ```
 
 #### Plot predicted response for the different predicotrs
-```{r gamma conditional effects dep,fig.height=4}
-plot(conditional_effects(mod_dep_gamma), plot = TRUE, ask = FALSE, newpage=FALSE)
+```{r gamma conditional effects anx,fig.height=5}
+plot(conditional_effects(mod_anx_gamma),plot = TRUE, ask = FALSE, newpage=FALSE)
 ```
 
 ## Plots of raw data
 
-```{r distribution dep, fig.height=5}
-# Assuming 'cov_5' is your data frame and 'DEP' is the response variable
-hist(cov_5$DEP, main = "Histogram of DEP", xlab = "DEP")
+```{r distribution anx, fig.height=5}
+# Assuming 'cov_5' is your data frame and 'ANX' is the response variable
+hist(cov_5$ANX, main = "Histogram of ANX", xlab = "ANX")
 
 # Add a line at y = 0 for reference
 abline(h = 0, col = "red")
@@ -142,7 +148,7 @@ abline(h = 0, col = "red")
 abline(v = 0, col = "blue")
 ```
 
-```{r boxplot dep, fig.height=5}
-boxplot(cov_5$DEP, main = "Boxplot of DEP")
+```{r boxplot anx, fig.height=5}
+boxplot(cov_5$ANX, main = "Boxplot of ANX")
 ```
 

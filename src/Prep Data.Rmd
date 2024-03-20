@@ -1,0 +1,195 @@
+---
+title: "Prep data for analysis"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE,
+    message = FALSE,
+    warning = FALSE,
+    fig.width = 4,
+    tidy = TRUE
+)
+
+## turn off scientific notation 
+options(scipen=999)
+```
+
+```{r libraries, options}
+# Load libraries
+library(tidyverse) #
+library(haven)  # load and work with SPSS data files
+library(summarytools) # for summary statistics
+library(gtsummary) # for summary statistics
+library(ggthemes)
+library(lme4) #frequentist regression models
+library(brms) # Bayesian Regression Models
+library(StanHeaders) # need to laod this for brms
+library(data.table) # wrangling and formatting data and tables
+library(formattable)
+library(broom)
+library(finalfit)
+library(knitr)
+
+## set theme
+theme_gtsummary_journal(journal = "jama")
+theme_gtsummary_compact()
+
+```
+
+```{r load data, options}
+### Put the working directory to where data file is ####
+cov <- read_sav("coventurefinaldataset.sav")
+
+##### filter out those with NO_SURPS_NO_DEPADO ##### 
+cov= cov[cov$NO_SURPS_NO_DEPADO==0,]
+
+##### Creating different riskhilo variables, PC agreed on the relevance of riskhilo3 ##### 
+cov$riskhilo2=1*((cov$AssignGroup>0&cov$Exp_Group==1)|(cov$riskhilo==1&cov$Exp_Group==0))
+cov$riskhilo3=1*(cov$RiskStatus>0)
+
+
+
+##### selecting relevant variables, recoding the flagged variable , and filter out high risks #####
+
+# relevent variables
+vars=c("schoolnum","Exp_Group","AgeAtTesting_Y1","AgeAtTesting_Y5","Language","DEM_01_Y1","SES_Y1","riskhilo","NO_SURPS",
+       "DEPAPO_ECHELLE_LUMIERE_Y1","DEPAPO_ECHELLE_LUMIERE_Y2",
+       "DEPAPO_ECHELLE_LUMIERE_Y3","DEPAPO_ECHELLE_LUMIERE_Y4","DEPAPO_ECHELLE_LUMIERE_Y5",
+       "BSI_echelle_TotalDepression_Y1","BSI_echelle_TotalDepression_Y2",
+       "BSI_echelle_TotalDepression_Y3","BSI_echelle_TotalDepression_Y4","BSI_echelle_TotalDepression_Y5",
+       "BSI_echelle_TotalAnxiete_Y1","BSI_echelle_TotalAnxiete_Y2",
+       "BSI_echelle_TotalAnxiete_Y3","BSI_echelle_TotalAnxiete_Y4","BSI_echelle_TotalAnxiete_Y5",
+       "SDQ_echelle_total_difficulties_Y1","SDQ_echelle_total_difficulties_Y2",
+       "SDQ_echelle_total_difficulties_Y3","SDQ_echelle_total_difficulties_Y4","SDQ_echelle_total_difficulties_Y5")
+
+#create new dataframe with the relevant variables
+cov_2 <- cov %>%
+  select(Baseline,RiskStatus,starts_with(vars))%>%
+  mutate(id=1:n(), year1=1,year2=2,year3=3,year4=4,year5=5,
+         Flagged_ECHELLE_LUMIERE_Y1=DEPAPO_ECHELLE_LUMIERE_Y1, 
+         DEP_TotalDepression_Y1=BSI_echelle_TotalDepression_Y1,
+         ANX_TotalAnxiety_Y1 = BSI_echelle_TotalAnxiete_Y1,
+         DIF_TotalDifficulties_Y1 = SDQ_echelle_total_difficulties_Y1)
+
+#Remove rows with no surps or depado 
+cov_2= cov_2[cov_2$NO_SURPS_NO_DEPADO==0,]
+
+#Remove low-risk students
+#cov_2= cov_2[cov_2$riskhilo3==1,]
+
+#Dichotomizing DEPADO variables
+cov_2[,14:22]=apply(cov_2[,14:22],2,function(x){1*(x>1)})
+cov_2$Flagged_ECHELLE_LUMIERE_Y1=1*(cov_2$Flagged_ECHELLE_LUMIERE_Y1>1)
+```
+
+```{r rename variables}
+##### Renaming variables for conformity (new name = old name) #####
+
+cov_3 <- cov_2 %>% rename("Flagged_ECHELLE_LUMIERE_Y2"="DEPAPO_ECHELLE_LUMIERE_Y2"  ,
+                      "Flagged_ECHELLE_LUMIERE_Y3"=        "DEPAPO_ECHELLE_LUMIERE_Y3"  ,
+                      "Flagged_ECHELLE_LUMIERE_Y4"=        "DEPAPO_ECHELLE_LUMIERE_Y4"  ,
+                      "Flagged_ECHELLE_LUMIERE_Y5"=        "DEPAPO_ECHELLE_LUMIERE_Y5"  ,
+                      "DEP_TotalDepression_Y2"="BSI_echelle_TotalDepression_Y2"  ,
+                      "DEP_TotalDepression_Y3"="BSI_echelle_TotalDepression_Y3"  ,
+                      "DEP_TotalDepression_Y4"="BSI_echelle_TotalDepression_Y4"  ,
+                      "DEP_TotalDepression_Y5"="BSI_echelle_TotalDepression_Y5",
+                      "ANX_TotalAnxiety_Y2" = "BSI_echelle_TotalAnxiete_Y2",
+                      "ANX_TotalAnxiety_Y3" = "BSI_echelle_TotalAnxiete_Y3",
+                      "ANX_TotalAnxiety_Y4" = "BSI_echelle_TotalAnxiete_Y4",
+                      "ANX_TotalAnxiety_Y5" = "BSI_echelle_TotalAnxiete_Y5",
+                      "DIF_TotalDifficulties_Y2" = "SDQ_echelle_total_difficulties_Y2",
+                      "DIF_TotalDifficulties_Y3" = "SDQ_echelle_total_difficulties_Y3",
+                      "DIF_TotalDifficulties_Y4" = "SDQ_echelle_total_difficulties_Y4",
+                      "DIF_TotalDifficulties_Y5" = "SDQ_echelle_total_difficulties_Y5")
+
+cov_4=cov_3%>% rename("Age_Y5"="AgeAtTesting_Y5",
+                      "Age_Y1"="AgeAtTesting_Y1",
+                      "DEM_01"= "DEM_01_Y1",
+                      "SES"= "SES_Y1"   )
+```
+
+```{r IPW, options}
+##### Creating IPW weights #####
+cov_4$depado_missingness_sum <- c(is.na(cov_4$Flagged_ECHELLE_LUMIERE_Y1)*1+
+                                 is.na(cov_4$Flagged_ECHELLE_LUMIERE_Y2)*1+
+                                 is.na(cov_4$Flagged_ECHELLE_LUMIERE_Y3)*1+
+                                 is.na(cov_4$Flagged_ECHELLE_LUMIERE_Y4)*1+
+                                 is.na(cov_4$Flagged_ECHELLE_LUMIERE_Y5)*1)
+
+model_predict_net <- glm(cov_4$Exp_Group ~ cov_4$depado_missingness_sum, #consider ading + school here
+                         family = binomial(link = "logit"))
+
+# Generate propensity scores and IPWs
+cov_4_b <- augment_columns(model_predict_net, cov_4,
+                           type.predict = "response") %>%
+  rename(propensity = .fitted) %>%
+  mutate(ipw = (cov_4$Exp_Group / propensity) + ((1 - cov_4$Exp_Group) / (1 - propensity)))
+
+cov_4_b$id_sub=c(1:nrow(cov_4_b))
+cov_4_b=cov_4_b %>% dplyr::select(order(colnames(cov_4_b)))
+
+```
+
+```{r long format data, options}
+##### Creating The long format dataset without IPW #####
+
+cov_4 <- cov_4 %>% 
+        select(-ends_with("_1")) #remove the 'imputed' data columns
+
+cov_4=cov_4 %>% dplyr::select(order(colnames(cov_4))) #putting columns in order
+
+#colnames(cov_4) #Checking what columns are in cov_4 to identify which one's to pivot longer
+
+cov_5=melt(setDT(cov_4), 
+           measure = patterns('DEPAPO_', 'Flagged_','DEP_','ANX_','DIF_', "BSI_","SDQ_","year"),
+           variable.name = 'var', value.name = c('DEPADO', 'Flagged','DEP','ANX','DIF',"BSI","SDQ", "year"))
+
+## set grouping variables to factors
+cov_5$Exp_Group=as.factor(cov_5$Exp_Group)
+cov_5$DEM_01=as.factor(cov_5$DEM_01)
+cov_5$Language=as.factor(cov_5$Language)
+cov_5$RiskStatus=as.factor(cov_5$RiskStatus)
+
+#### Mean centre age variable
+cov_5 <- cov_5 %>%
+  mutate(Age_Y1_cent = Age_Y1 - mean(Age_Y1, na.rm=TRUE))
+
+#### create variables with baseline covariates ----
+
+# Filter the dataset for year == 1 and select necessary columns
+year1_data <- cov_5 %>%
+  filter(year == 1) %>%
+  select(id, Flagged, ANX, DIF, DEP)
+
+# Create new columns with the values from year == 1 data
+cov_5 <- cov_5 %>%
+  left_join(year1_data, by = "id", suffix = c("", "_Y1"))
+
+### Add baseline surps scores (so we can use these later as covariates if needed)
+surps_y1 <- cov %>%
+  select(Baseline, SURPS_NT_Y1, SURPS_AS_Y1, SURPS_SS_Y1, SURPS_IMP_Y1)
+
+# Create new columns with the values from year == 1 data
+cov_5 <- cov_5 %>%
+  left_join(surps_y1, by = "Baseline")
+
+# create df with whole sample
+cov_6 <- cov_5
+
+# remove low-risk students
+cov_5 <- cov_5 %>%
+  filter(riskhilo3=="1")
+
+## Create new variables with binary outcomes
+cov_5 <- cov_5  %>%
+  mutate(DEP_BIN = ifelse(is.na(DEP), NA, ifelse(DEP >= 1, 1, 0))) %>% #any symptoms
+  mutate(ANX_BIN = ifelse(is.na(ANX), NA, ifelse(ANX >= 1, 1, 0))) %>% #any symptoms
+  mutate(DEP_BIN_r = ifelse(is.na(DEP), NA, DEP / 7)) %>% #mean symptoms
+  mutate(ANX_BIN_r = ifelse(is.na(ANX), NA, ANX / 5)) %>% #mean symptoms
+  mutate(DEP_BIN_rc = ifelse(is.na(DEP_BIN_r), NA, ifelse(DEP_BIN_r >= 0.5, 1, 0))) %>% #PC's clinical cut-off
+  mutate(ANX_BIN_rc = ifelse(is.na(ANX_BIN_r), NA, ifelse(ANX_BIN_r >= 0.5, 1, 0))) #PC's clinical cut-off
+
+```
+
