@@ -1,0 +1,61 @@
+---
+title: "Anxiety outcomes (gamma model with weakly informative priors"
+output: html_notebook
+---
+
+## Gamma (weakly informative priors)
+
+```{r anx gamma model priors, echo=TRUE, results='hide'}
+mod_anx_gamma_priors <- brm(
+  ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),
+  data = cov_5,
+  family = hurdle_gamma(link = "log"),
+  warmup = 1000, iter = 4000,
+  cores = 4, chains = 4,
+  seed = 123,
+  control = list(adapt_delta = 0.9), #changing to improve convergence
+  prior = c(
+    prior(normal(0, 10), class = Intercept), # Weakly informative prior for the intercept
+    prior(normal(0, 5), class = b), # Weakly informative prior for fixed effects
+    prior(student_t(3, 0, 10), class = sd), # Wider prior for group-level standard deviations
+    prior(gamma(0.1, 0.1), class = shape), # Less informative prior for the shape parameter
+    prior(beta(2, 2), class = hu) # Less informative prior for the hurdle probability
+  )
+)
+```
+
+### Diagnostic plots
+#### Plot density of data vs model predicted data
+
+```{r}
+pp_check(mod_anx_gamma_priors)
+```
+
+#### Plot variables and traceplots
+```{r}
+plot(mod_anx_gamma_priors,
+     variable = "^b_", regex = TRUE, # only plot population level
+     plot = TRUE, ask = FALSE, newpage=FALSE) 
+```
+
+#### Plot predicted response for the different predictors
+```{r}
+plot(conditional_effects(mod_anx_gamma_priors),plot = TRUE, ask = FALSE, newpage=FALSE)
+```
+
+
+
+```{r}
+ # Extract posterior draws 
+posterior_anx <- as.array(mod_anx_gamma_priors)
+np_anx<- nuts_params(mod_anx_gamma_priors)
+
+# Customise appearance of divergences
+color_scheme_set("darkgray")
+div_style <- parcoord_style_np(div_color = "green",div_size = 0.05,div_alpha = 0.4)
+
+# Plot divergences
+mcmc_parcoord(posterior_anx, size = 0.25, alpha = 0.1,
+              np = np_anx, np_style = div_style)
+```
+

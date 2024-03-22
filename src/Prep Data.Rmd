@@ -40,7 +40,7 @@ theme_gtsummary_compact()
 
 ```{r load data, options}
 ### Put the working directory to where data file is ####
-cov <- read_sav("coventurefinaldataset.sav")
+cov <- read_sav("/Users/sam/Library/CloudStorage/OneDrive-UniversitedeMontreal/CoVenture/MainOutcomes_Kamran/coventurefinaldataset.sav")
 
 ##### filter out those with NO_SURPS_NO_DEPADO ##### 
 cov= cov[cov$NO_SURPS_NO_DEPADO==0,]

@@ -38,6 +38,7 @@ library(knitr)
 library(emmeans)
 library(ggeffects)
 library(tidybayes)
+library(bayesplot)
 
 ## set theme
 theme_gtsummary_journal(journal = "jama")
@@ -92,36 +93,34 @@ plot(conditional_effects(mod_anx_cont), plot = TRUE, ask = FALSE, newpage=FALSE)
 ```
 
 ## Gamma 
-```{r depression gamma, echo=TRUE, results='hide'}
-mod_anx_gamma <- brm(ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),  
-               data = cov_5, 
-               family = hurdle_gamma(link = "log"),
-               warmup = 1000, iter = 4000, 
-               cores = 4, chains = 4, 
-               seed = 123,
-               control = list(adapt_delta = 0.9)) #increasing for better convergence     
+```{r anxiety gamma, echo=TRUE, results='hide'}
+mod_anx_gamma <- brm(
+  ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),
+  data = cov_5,
+  family = hurdle_gamma(link = "log"),
+  warmup = 1000, iter = 4000,
+  cores = 4, chains = 4,
+  seed = 123,
+  control = list(adapt_delta = 0.9) #changing to improve convergence
+)
 ```
 ### Results {.tabset}
 #### Summary
-```{r depression gamma results summary}
+```{r anxiety gamma results summary}
 summ_mod_anx_gamma=summary(mod_anx_gamma)
 formattable(summ_mod_anx_gamma$fixed)
 ```
 #### Detailed
-```{r depression gamma results}
+```{r anxiety gamma results}
 summ_mod_anx_gamma
 ```
 ### Model quality checks
-#### Pairs plot (as suggested by BRMS)
-I'm not really sure how to interpret this. 
-```{r pairs plot, fig.height=10}
-pairs(mod_dep_gamma)
-```
-
 #### Plot predicted data using posterior predictive checks
 ```{r Gamma Plot density of data vs model predicted data}
 pp_check(mod_anx_gamma)
 ```
+
+
 
 #### Plot variables and traceplots
 ```{r gamma traceplots}
@@ -133,6 +132,94 @@ plot(mod_anx_gamma,
 #### Plot predicted response for the different predicotrs
 ```{r gamma conditional effects anx,fig.height=5}
 plot(conditional_effects(mod_anx_gamma),plot = TRUE, ask = FALSE, newpage=FALSE)
+```
+## Poisson
+```{r anxiety poisson, echo=TRUE, results='hide'}
+mod_anx_pois <- brm(
+  ANX ~ 1 + DEM_01 + Exp_Group + Language + year + year:Exp_Group + (1|id+schoolnum),
+  data = cov_5,
+  family = zero_inflated_poisson(link = "log", link_zi = "logit"),
+  warmup = 1000, iter = 4000,
+  cores = 4, chains = 4,
+  seed = 123,
+  control = list(adapt_delta = 0.9) #changing to improve convergence
+)
+```
+#### Summary
+```{r anxiety poisson results summary}
+summ_mod_anx_pois=summary(mod_anx_pois)
+formattable(summ_mod_anx_pois$fixed)
+```
+
+### Plot posterior predictive checks
+
+```{r}
+pp_check(mod_anx_pois)
+```
+### LOO comparing gamma and poisson models
+- I think this suggests that the gamma model is better
+```{r}
+
+# Compute LOO for mod_anx_gamma
+loo_gamma <- loo(mod_anx_gamma)
+
+# Compute LOO for mod_anx_pois
+loo_pois <- loo(mod_anx_pois)
+
+# compare both models
+loo_compare(loo_gamma, loo_pois)
+```
+ 
+### Confusion matrices
+Threshold for comparing binary actual outcomes vs predicted: above or below mean anxiety (3.49)
+Gamma seems slightly better at predicting who is below the mean on anxeity, but poisson seems slightly better at predicting who is above the mean
+#### Gamma model
+```{r gamma confusion matrix}
+# Get predicted values from the model
+predictions <- predict(mod_anx_gamma, type = "response")
+
+# Define threshold for binary classification
+threshold <- mean(cov_5$ANX,na.rm = TRUE)
+
+# Convert predicted probabilities into binary predictions
+binary_predictions <- ifelse(predictions > threshold, 1, 0)
+binary_predictions <- as.vector(binary_predictions[,1])
+
+# Obtain actual outcomes from the dataset
+actual_outcomes <- cov_5$ANX  # Adjust according to your dataset
+binary_actual_outcomes <- ifelse(actual_outcomes > threshold, 1, 0) 
+# Remove NA values from actual_outcomes
+binary_actual_outcomes <- na.omit(binary_actual_outcomes)
+
+# Create confusion matrix
+conf_matrix <- table(binary_actual_outcomes, binary_predictions)
+
+# Display confusion matrix
+print(conf_matrix)
+```
+#### Possoin model
+```{r}
+# Get predicted values from the model
+predictions <- predict(mod_anx_pois, type = "response")
+
+# Define threshold for binary classification
+threshold <- mean(cov_5$ANX,na.rm = TRUE)
+
+# Convert predicted probabilities into binary predictions
+binary_predictions <- ifelse(predictions > threshold, 1, 0)
+binary_predictions <- as.vector(binary_predictions[,1])
+
+# Obtain actual outcomes from the dataset
+actual_outcomes <- cov_5$ANX  # Adjust according to your dataset
+binary_actual_outcomes <- ifelse(actual_outcomes > threshold, 1, 0) 
+# Remove NA values from actual_outcomes
+binary_actual_outcomes <- na.omit(binary_actual_outcomes)
+
+# Create confusion matrix
+conf_matrix <- table(binary_actual_outcomes, binary_predictions)
+
+# Display confusion matrix
+print(conf_matrix)
 ```
 
 ## Plots of raw data
@@ -151,4 +238,3 @@ abline(v = 0, col = "blue")
 ```{r boxplot anx, fig.height=5}
 boxplot(cov_5$ANX, main = "Boxplot of ANX")
 ```
-
